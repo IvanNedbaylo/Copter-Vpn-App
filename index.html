@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg: #121212;
+            --card-bg: #1e1e24;
+            --text-main: #ffffff;
+            --text-muted: #a0a0a5;
+            --accent: #8b5cf6;
+            --accent-hover: #7c3aed;
+            --success: #10b981;
+            --border: #2d2d35;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            background-color: var(--bg); 
+            color: var(--text-main); 
+            padding: 20px; 
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+        .container { max-width: 500px; margin: 0 auto; }
+        
+        .header { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; }
+        .logo { width: 50px; height: 50px; background: linear-gradient(135deg, var(--accent), #4c1d95); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3); }
+        .title h1 { font-size: 20px; font-weight: 700; }
+        .title p { font-size: 13px; color: var(--text-muted); }
+
+        .status-card { background: var(--card-bg); border-radius: 20px; padding: 20px; margin-bottom: 20px; border: 1px solid var(--border); }
+        .status-badge { display: inline-flex; align-items: center; background: rgba(16, 185, 129, 0.15); color: var(--success); padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-bottom: 15px; }
+        .status-badge::before { content: ''; width: 8px; height: 8px; background: var(--success); border-radius: 50%; margin-right: 8px; }
+        .info-block { margin-bottom: 20px; }
+        .info-label { font-size: 13px; color: var(--text-muted); margin-bottom: 4px; }
+        .info-value { font-size: 18px; font-weight: 700; }
+        
+        .btn-main { width: 100%; padding: 15px; background: var(--accent); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .btn-main:active { background: var(--accent-hover); }
+        .btn-main:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .connect-card { background: var(--card-bg); border-radius: 20px; padding: 20px; border: 1px solid var(--border); }
+        .connect-title { font-size: 18px; font-weight: 700; margin-bottom: 5px; }
+        .connect-subtitle { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; }
+        
+        .tabs { display: flex; overflow-x: auto; gap: 10px; padding-bottom: 10px; margin-bottom: 15px; scrollbar-width: none; }
+        .tab { padding: 8px 16px; background: transparent; border: 1px solid var(--border); border-radius: 20px; color: var(--text-muted); font-size: 14px; font-weight: 500; cursor: pointer; white-space: nowrap; transition: 0.2s; }
+        .tab.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+        .step { display: flex; gap: 15px; margin-bottom: 20px; animation: fadeIn 0.3s ease; }
+        .step-number { width: 28px; height: 28px; background: rgba(139, 92, 246, 0.2); color: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+        .step-content h3 { font-size: 15px; margin-bottom: 5px; }
+        .step-content p { font-size: 13px; color: var(--text-muted); }
+
+        /* Обновленный блок для приложений */
+        .download-box { 
+            background: #25252d; 
+            border: 1px solid var(--border); 
+            border-radius: 12px; 
+            padding: 15px; 
+            margin-top: 10px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            gap: 15px; /* Отступ между текстом и кнопкой */
+        }
+        .app-info h4 { font-size: 15px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .app-info p { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+        .btn-download { 
+            background: #33333d; 
+            color: white; 
+            padding: 8px 16px; 
+            border-radius: 8px; 
+            text-decoration: none; 
+            font-size: 13px; 
+            font-weight: 600; 
+            border: 1px solid var(--border); 
+            white-space: nowrap;
+        }
+        
+        .hidden { display: none !important; }
+        .key-display { background: #25252d; padding: 15px; border-radius: 12px; font-family: monospace; font-size: 12px; word-break: break-all; color: #a78bfa; margin-top: 15px; border: 1px dashed var(--accent); }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div class="logo">🚁</div>
+        <div class="title">
+            <h1>CopterVpn</h1>
+            <p>Подписка: активна</p>
+        </div>
+    </div>
+
+    <div class="status-card" id="main-status">
+        <div class="status-badge">Подписка активна</div>
+        <div class="info-block">
+            <div class="info-label">Действует до</div>
+            <div class="info-value">Бессрочно</div>
+        </div>
+        
+        <!-- Кнопка для чёрных списков -->
+        <button class="btn-main" id="get-keys-btn" onclick="fetchKeys()">⚫ Получить чёрные ключи (Wi-Fi)</button>
+    </div>
+
+    <div class="connect-card" id="connect-section">
+        <div class="connect-title">Как подключиться — 3 шага</div>
+        <div class="connect-subtitle">Выберите ваше устройство и сделайте три простых шага.</div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('android', this)">Android</button>
+            <button class="tab" onclick="switchTab('ios', this)">iPhone / iPad</button>
+            <button class="tab" onclick="switchTab('windows', this)">Windows</button>
+        </div>
+
+        <!-- Android -->
+        <div id="instr-android" class="instruction-block">
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h3>Установите приложение</h3>
+                    <p>Для Android мы рекомендуем <b>Happ</b>.</p>
+                    <div class="download-box">
+                        <div class="app-info">
+                            <h4>Happ <span style="font-size:10px; color:var(--accent); background:rgba(139,92,246,0.2); padding:2px 6px; border-radius:4px;">РЕКОМЕНДУЕМ</span></h4>
+                        </div>
+                        <a href="https://play.google.com/store/apps/details?id=com.happproxy" class="btn-download">Скачать</a>
+                    </div>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h3>Скопируйте ключ</h3>
+                    <p>Нажмите кнопку выше.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h3>Импортируйте</h3>
+                    <p>В приложении нажмите «+» и выберите «Импорт из буфера обмена».</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- iOS -->
+        <div id="instr-ios" class="instruction-block hidden">
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h3>Установите приложение</h3>
+                    <p>Для iOS мы рекомендуем <b>Incy</b>.</p>
+                    <div class="download-box">
+                        <div class="app-info">
+                            <h4>Incy <span style="font-size:10px; color:var(--accent); background:rgba(139,92,246,0.2); padding:2px 6px; border-radius:4px;">РЕКОМЕНДУЕМ</span></h4>
+                        </div>
+                        <a href="https://apps.apple.com/ru/app/incy/id6756943388" class="btn-download">Скачать</a>
+                    </div>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h3>Скопируйте ключ</h3>
+                    <p>Нажмите кнопку выше.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h3>Импортируйте</h3>
+                    <p>В приложении нажмите «+» и выберите «Импорт из буфера обмена».</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Windows -->
+        <div id="instr-windows" class="instruction-block hidden">
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h3>Установите приложение</h3>
+                    <p>Для Windows мы рекомендуем <b>Happ</b>.</p>
+                    <div class="download-box">
+                        <div class="app-info">
+                            <h4>Happ <span style="font-size:10px; color:var(--accent); background:rgba(139,92,246,0.2); padding:2px 6px; border-radius:4px;">РЕКОМЕНДУЕМ</span></h4>
+                            <p>Есть на официальном сайте</p>
+                        </div>
+                        <a href="https://happproxy.com/" target="_blank" class="btn-download">Скачать</a>
+                    </div>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h3>Скопируйте ключ</h3>
+                    <p>Нажмите кнопку «Получить чёрные ключи» выше.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h3>Импортируйте</h3>
+                    <p>В приложении нажмите «Импорт из буфера обмена».</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Экран с ключами -->
+    <div id="keys-screen" class="connect-card hidden">
+        <div class="connect-title">🔑 Ваши чёрные ключи (Wi-Fi)</div>
+        <div class="connect-subtitle">Скопируйте строку и вставьте в приложение.</div>
+        <div class="key-display" id="key-text"></div>
+        <button class="btn-main" style="margin-top: 15px;" onclick="copyKey()">📋 Скопировать</button>
+        <button class="btn-main" style="background: transparent; border: 1px solid var(--border); color: var(--text-muted); margin-top: 10px;" onclick="goBack()">⬅️ Назад</button>
+    </div>
+
+</div>
+
+<script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+    tg.setHeaderColor('#121212');
+
+    // ⚠️ ТВОИ ДАННЫЕ УЖЕ ВСТАВЛЕНЫ ⚠️
+    const GITHUB_USER = "IvanNedbaylo";
+    const GITHUB_REPO = "Copter-Vpn-App";
+    const BRANCH = "main"; // Если не работает, попробуй "master"
+
+    // Ссылка ТОЛЬКО на файл с чёрными ключами
+    const URL_KEYS = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${BRANCH}/keys.txt`;
+
+    let currentKey = "";
+
+    function switchTab(device, btn) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.instruction-block').forEach(b => b.classList.add('hidden'));
+        document.getElementById(`instr-${device}`).classList.remove('hidden');
+    }
+
+    async function fetchKeys() {
+        const btn = document.getElementById('get-keys-btn');
+        btn.disabled = true;
+        btn.innerText = "⏳ Загрузка...";
+
+        try {
+            const response = await fetch(URL_KEYS + "?t=" + new Date().getTime()); // Обход кэша
+            if (!response.ok) throw new Error("Файл не найден");
+            
+            const text = await response.text();
+            
+            // Парсим ключи
+            const keysArray = text.split('\n')
+                .map(k => k.trim())
+                .filter(k => k.startsWith('vless://') || k.startsWith('trojan://') || k.startsWith('vmess://'));
+
+            if (keysArray.length === 0) {
+                tg.showAlert("⚠️ Ключи не найдены в файле.");
+                resetBtn();
+                return;
+            }
+
+            // Берем первые 10 ключей
+            const sample = keysArray.slice(0, 10);
+            const combined = sample.join("\n");
+            
+            // Кодируем в Base64
+            currentKey = btoa(unescape(encodeURIComponent(combined)));
+
+            // Показываем результат
+            document.getElementById('main-status').classList.add('hidden');
+            document.getElementById('connect-section').classList.add('hidden');
+            document.getElementById('keys-screen').classList.remove('hidden');
+            document.getElementById('key-text').innerText = currentKey;
+            
+        } catch (error) {
+            console.error(error);
+            tg.showAlert("❌ Не удалось загрузить ключи. Проверьте ссылку в коде.");
+            resetBtn();
+        }
+    }
+
+    function resetBtn() {
+        const btn = document.getElementById('get-keys-btn');
+        btn.disabled = false;
+        btn.innerText = "⚫ Получить чёрные ключи (Wi-Fi)";
+    }
+
+    function copyKey() {
+        if (currentKey) {
+            navigator.clipboard.writeText(currentKey).then(() => {
+                tg.showAlert("✅ Ключ скопирован!");
+            }).catch(() => {
+                tg.showAlert("Не удалось скопировать. Выделите текст вручную.");
+            });
+        }
+    }
+
+    function goBack() {
+        document.getElementById('keys-screen').classList.add('hidden');
+        document.getElementById('main-status').classList.remove('hidden');
+        document.getElementById('connect-section').classList.remove('hidden');
+        resetBtn();
+    }
+</script>
+</body>
+</html>
