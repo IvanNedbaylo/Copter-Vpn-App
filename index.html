@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <script src="https://telegram.org/js/telegram-web-app.js" defer></script>
+    
+    <style>
+        :root {
+            --bg: #121212;
+            --card-bg: #1e1e24;
+            --text-main: #ffffff;
+            --text-muted: #a0a0a5;
+            --accent: #8b5cf6;
+            --accent-hover: #7c3aed;
+            --success: #10b981;
+            --border: #2d2d35;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            background-color: var(--bg); 
+            color: var(--text-main); 
+            padding: 20px; 
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+        .container { max-width: 500px; margin: 0 auto; }
+        
+        .header { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; }
+        .logo { width: 50px; height: 50px; background: linear-gradient(135deg, var(--accent), #4c1d95); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3); }
+        .title h1 { font-size: 20px; font-weight: 700; }
+        .title p { font-size: 13px; color: var(--text-muted); }
+
+        .status-card { background: var(--card-bg); border-radius: 20px; padding: 20px; margin-bottom: 20px; border: 1px solid var(--border); }
+        .status-badge { display: inline-flex; align-items: center; background: rgba(16, 185, 129, 0.15); color: var(--success); padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-bottom: 15px; }
+        .status-badge::before { content: ''; width: 8px; height: 8px; background: var(--success); border-radius: 50%; margin-right: 8px; }
+        .info-block { margin-bottom: 20px; }
+        .info-label { font-size: 13px; color: var(--text-muted); margin-bottom: 4px; }
+        .info-value { font-size: 18px; font-weight: 700; }
+
+        .switch-container {
+            display: flex;
+            background: #25252d;
+            border-radius: 12px;
+            padding: 5px;
+            margin-bottom: 15px;
+        }
+        .switch-btn {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: 0.3s;
+        }
+        .switch-btn.active {
+            background: var(--accent);
+            color: white;
+        }
+        
+        .btn-main { width: 100%; padding: 15px; background: var(--accent); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .btn-main:active { background: var(--accent-hover); }
+        .btn-main:disabled { opacity: 0.7; cursor: wait; }
+
+        .connect-card { background: var(--card-bg); border-radius: 20px; padding: 20px; border: 1px solid var(--border); }
+        .connect-title { font-size: 18px; font-weight: 700; margin-bottom: 5px; }
+        .connect-subtitle { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; }
+        
+        .tabs { 
+            display: flex; 
+            gap: 6px; 
+            padding-bottom: 10px; 
+            margin-bottom: 15px; 
+            scrollbar-width: none; 
+            overflow-x: auto; 
+            justify-content: space-between; 
+        }
+        
+        .tab { 
+            flex: 1; 
+            padding: 8px 4px; 
+            background: transparent; 
+            border: 1px solid var(--border); 
+            border-radius: 12px; 
+            color: var(--text-muted); 
+            font-size: 11px; 
+            font-weight: 500; 
+            cursor: pointer; 
+            white-space: nowrap; 
+            transition: 0.2s; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 4px; 
+        }
+        
+        .tab.active { 
+            background: var(--accent); 
+            color: white; 
+            border-color: var(--accent); 
+        }
+
+        .step { display: flex; gap: 15px; margin-bottom: 20px; }
+        .step-number { width: 28px; height: 28px; background: rgba(139, 92, 246, 0.2); color: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+        .step-content h3 { font-size: 15px; margin-bottom: 5px; }
+        .step-content p { font-size: 13px; color: var(--text-muted); }
+
+        .download-box { background: #25252d; border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-top: 10px; display: flex; align-items: center; justify-content: space-between; gap: 15px; }
+        .app-info h4 { font-size: 15px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .app-info p { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+        .btn-download { background: #33333d; color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 600; border: 1px solid var(--border); white-space: nowrap; }
+        
+        .hidden { display: none !important; }
+        .key-display { background: #25252d; padding: 15px; border-radius: 12px; font-family: monospace; font-size: 12px; word-break: break-all; color: #a78bfa; margin-top: 15px; border: 1px dashed var(--accent); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div class="logo">🚁</div>
+        <div class="title">
+            <h1>CopterVpn</h1>
+            <p>Подписка: активна</p>
+        </div>
+    </div>
+
+    <div class="status-card" id="main-status">
+        <div class="status-badge">Подписка активна</div>
+        <div class="info-block">
+            <div class="info-label">Действует до</div>
+            <div class="info-value">Бессрочно</div>
+        </div>
+        
+        <div class="switch-container">
+            <div class="switch-btn active" id="btn-wifi" onclick="selectList('wifi')">⚫ Чёрные (Wi-Fi)</div>
+            <div class="switch-btn" id="btn-white" onclick="selectList('white')">⚪ Белые списки</div>
+        </div>
+
+        <button class="btn-main" id="get-keys-btn" onclick="showMyKeys()">Получить ключи</button>
+    </div>
+
+    <div class="connect-card" id="connect-section">
+        <div class="connect-title">Как подключиться — 3 шага</div>
+        <div class="connect-subtitle">Выберите ваше устройство и сделайте три простых шага.</div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('android', this)">🤖 Android</button>
+            <button class="tab" onclick="switchTab('ios', this)">🍏 iPhone</button>
+            <button class="tab" onclick="switchTab('windows', this)">🪟 Windows</button>
+            <button class="tab" onclick="switchTab('linux', this)">🐧 Linux</button>
+            <button class="tab" onclick="switchTab('macos', this)">💻 macOS</button>
+        </div>
+
+        <!-- Android -->
+        <div id="instr-android" class="instruction-block">
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h3>Установите приложение</h3>
+                    <p>Для Android мы рекомендуем <b>Happ</b>.</p>
+                    <div class="download-box">
+                        <div class="app-info">
+                            <h4>Happ <span style="font-size:10px; color:var(--accent); background:rgba(139,92,246,0.2); padding:2px 6px; border-radius:4px;">РЕКОМЕНДУЕМ</span></h4>
+                        </div>
+                        <a href="https://play.google.com/store/apps/details?id=com.happproxy" class="btn-download">Скачать</a>
+                    </div>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h3>Скопируйте ключ</h3>
+                    <p>Нажмите кнопку выше.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h3>Импортируйте</h3>
+                    <p>В приложении нажмите «+» и выберите «Импорт из буфера обмена».</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- iOS -->
+        <div id="instr-ios" class="instruction-block hidden">
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h3>Установите приложение</h3>
+                    <p>Для iOS мы рекомендуем <b>Incy</b>.</p>
+                    <div class="download-box">
+                        <div class="app-info">
+                            <h4>Incy <span style="font-size:10px; color:var(--accent); background:rgba(139,92,246,0.2); padding:2px 6px; border-radius:4px;">РЕКОМЕНДУЕМ</span></h4>
+                        </div>
+                        <a href="https://apps.apple.com/ru/app/incy/id6756943388" class="btn-download">Скачать</a>
+                    </div>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h3>Скопируйте ключ</h3>
+                    <p>Нажмите кнопку выше.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h3>Импортируйте</h3>
+                    <p>В приложении нажмите «+» и выберите «Импорт из буфера обмена».</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Windows -->
+        <div id="instr-windows" class="instruction-block hidden">
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h3>Установите приложение</h3>
+                    <p>Для Windows мы рекомендуем <b>Happ</b>.</p>
+                    <div class="download-box">
+                        <div class="app-info">
+                            <h4>Happ <span style="font-size:10px; color:var(--accent); background:rgba(139,92,246,0.2); padding:2px 6px; border-radius:4px;">РЕКОМЕНДУЕМ</span></h4>
+                        </div>
+                        <a href="https://happ.su/" target="_blank" class="btn-download">Скачать</a>
+                    </div>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h3>Скопируйте ключ</h3>
+                    <p>Нажмите кнопку выше.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h3>Импортируйте</h3>
+                    <p>В приложении нажмите «Импорт из буфера обмена».</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Linux -->
+        <div id="instr-linux" class="instruction-block hidden">
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h3>Установите приложение</h3>
+                    <p>Для Linux мы рекомендуем <b>Happ</b>.</p>
+                    <div class="download-box">
+                        <div class="app-info">
+                            <h4>Happ <span style="font-size:10px; color:var(--accent); background:rgba(139,92,246,0.2); padding:2px 6px; border-radius:4px;">РЕКОМЕНДУЕМ</span></h4>
+                        </div>
+                        <a href="https://happ.su/" target="_blank" class="btn-download">Скачать</a>
+                    </div>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h3>Скопируйте ключ</h3>
+                    <p>Нажмите кнопку выше.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h3>Импортируйте</h3>
+                    <p>В приложении нажмите «Импорт из буфера обмена».</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- macOS -->
+        <div id="instr-macos" class="instruction-block hidden">
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h3>Установите приложение</h3>
+                    <p>Для macOS мы рекомендуем <b>Happ</b>.</p>
+                    <div class="download-box">
+                        <div class="app-info">
+                            <h4>Happ <span style="font-size:10px; color:var(--accent); background:rgba(139,92,246,0.2); padding:2px 6px; border-radius:4px;">РЕКОМЕНДУЕМ</span></h4>
+                        </div>
+                        <a href="https://happ.su/" target="_blank" class="btn-download">Скачать</a>
+                    </div>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h3>Скопируйте ключ</h3>
+                    <p>Нажмите кнопку выше.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h3>Импортируйте</h3>
+                    <p>В приложении нажмите «Импорт из буфера обмена».</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Экран с ключами -->
+    <div id="keys-screen" class="connect-card hidden">
+        <div class="connect-title" id="keys-title">🔑 Ваши ключи</div>
+        <div class="connect-subtitle">Скопируйте строку и вставьте в приложение.</div>
+        <div class="key-display" id="key-text"></div>
+        <button class="btn-main" style="margin-top: 15px;" onclick="copyKey()">📋 Скопировать</button>
+        <button class="btn-main" style="background: transparent; border: 1px solid var(--border); color: var(--text-muted); margin-top: 10px;" onclick="goBack()">⬅️ Назад</button>
+    </div>
+
+</div>
+
+<script>
+    let tg = null;
+    try {
+        if (window.Telegram && window.Telegram.WebApp) {
+            tg = window.Telegram.WebApp;
+            tg.expand();
+            tg.setHeaderColor('#121212');
+        }
+    } catch (e) { }
+
+    // ⚠️ КЛЮЧИ ДЛЯ ЧЁРНЫХ СПИСКОВ (Wi-Fi) ⚠️
+    const MY_KEYS_WIFI = [
+        "vless://9a0e84f8-4b58-477f-99da-5fac5a2e58e8@36a466g.fi1.h1clayd.click:443?encryption=none&pbk=pAgrBKJCmuSJHIzYkEJTqsOBOVBK_DMtEqFPo-PaTkg&security=reality&serviceName=0adb9638509b&sid=b3c9d0c6bdd114a6&sni=36a466g.fi1.h1clayd.click&type=grpc&fp=chrome#%F0%9F%87%AB%F0%9F%87%AE%20Finland%2C%20Helsinki%20%7C%20%5BBL%5D",
+        "vless://9a0e84f8-4b58-477f-99da-5fac5a2e58e8@3f8efdt.fi1.h1clayd.click:443?security=reality&type=tcp&packetEncoding=xudp&sni=3f8efdt.fi1.h1clayd.click&sid=023a1e6ffc32be10&pbk=1D_o1pqfVoReg9zLPKNy1wCL7aGWytbmbYPbbJGaozY&fp=chrome#%F0%9F%87%AB%F0%9F%87%AE%20Finland%2C%20Helsinki%20%7C%20%5BBL%5D",
+        "vless://d86e6fda-e519-46ab-98eb-9ff9a9da5984@5.83.129.236:443?type=grpc&security=tls&sni=host-de-upscale.cdn.cachefleet.com&serviceName=a9w9wmko0k2od14hv8v&fp=chrome#%F0%9F%87%A9%F0%9F%87%AA%20Germany%2C%20Frankfurt%20am%20Main%20%7C%20%5BBL%5D",
+        "vless://0ceacfa0-6228-4e78-80e4-e5e29c924718@fastiland.beautishine.ir:43232?security=tls&alpn=h2%2Chttp%2F1.1&encryption=none&insecure=0&headerType=none&type=tcp&allowInsecure=0&sni=fastiland.beautishine.ir&fp=chrome#%F0%9F%87%A9%F0%9F%87%AA%20Germany%2C%20Frankfurt%20am%20Main%20%7C%20%5BBL%5D",
+        "vless://XpnTeam-38@199.232.78.160:443?path=%2F&security=tls&alpn=http%2F1.1&encryption=none&insecure=0&host=Appxdn.global.ssl.fastly.net&type=ws&allowInsecure=0&sni=ssl.fastly.com&fp=chrome#%F0%9F%87%AB%F0%9F%87%B7%20France%2C%20Paris%20%7C%20%F0%9F%8C%90%20%7C%20%5BBL%5D"
+    ];
+
+    // ⚠️ КЛЮЧИ ДЛЯ БЕЛЫХ СПИСКОВ ⚠️
+    const MY_KEYS_WHITE = [
+        "vless://4fb684c9-977f-4a7c-82a5-1f70fc141510@194.113.235.13:58888?flow=xtls-rprx-vision&encryption=none&type=tcp&security=reality&fp=chrome&sni=sun6-21.userapi.com&pbk=vTATCiPT7A58mmpm0k2qnIlOKqPL5rxcmgXKxzBDLXU&sid=7a3f9e2b1c8d4f6a#%F0%9F%87%B7%F0%9F%87%BA%20WLUnlocker%20%D0%A0%D0%BE%D1%81%D1%81%D0%B8%D1%8F",
+        "vless://6f623839-1e6f-36ea-aa5b-5a8d9aa16fcd@185.218.204.186:2034?security=tls&type=ws&headerType=&path=/&host=&sni=de4.x3vpn.ru&fp=#%F0%9F%87%B7%F0%9F%87%BA%20WLUnlocker%20%D0%A0%D0%BE%D1%81%D1%81%D0%B8%D1%8F",
+        "vless://7d40449f-92df-4256-9607-679241455d49@91.193.17.111:443?type=tcp&security=reality&flow=xtls-rprx-vision&sni=drive.yandex.ru&pbk=6Jm0J6DFfO2P-OOUd1OygjPigR4nQjLY5vpUsM83OXM&sid=4967e8608eb2a42c&fp=chrome#%F0%9F%87%B7%F0%9F%87%BA%20WLUnlocker%20%D0%A0%D0%BE%D1%81%D1%81%D0%B8%D1%8F",
+        "vless://4dde0df3-aa67-417c-882e-28beb3886961@as.pinkweb.one:443/?type=tcp&encryption=none&flow=xtls-rprx-vision&sni=as.pinkweb.one&fp=chrome&security=reality&pbk=Acr_m1aQ1wca5PAoQiVNUPLcSZdgrUzCbM9he_r1N3o&sid=262b0f2ad950abd9#%F0%9F%87%B7%F0%9F%87%BA%20WLUnlocker%20%D0%A0%D0%BE%D1%81%D1%81%D0%B8%D1%8F",
+        "vless://46b81618-5d7f-4b65-b95f-7f782b8242be@193.42.36.137:499?type=tcp&security=reality&flow=xtls-rprx-vision&fp=qq&pbk=nDq00UeDI5TKKFipI6rgdVCqiTO98ncHKn90Qp3EsBE&sid=f2b78452f9233f26&sni=ads.x5.ru&path=&host=#%F0%9F%87%B7%F0%9F%87%BA%20WLUnlocker%20%D0%A0%D0%BE%D1%81%D1%81%D0%B8%D1%8F",
+        "vless://645da6ec-876b-44c9-8fdc-2d0c4715ffd0@nl.whalon.top:443?type=tcp&security=reality&flow=xtls-rprx-vision&fp=chrome&pbk=t2mg38oyiICWzWrUjOEpQAyRKJfcdanmr1imcTqT8H8&sid=&sni=nl.whalon.top&path=&host=#%F0%9F%87%B7%F0%9F%87%BA%20WLUnlocker%20%D0%A0%D0%BE%D1%81%D1%81%D0%B8%D1%8F",
+        "vless://c08d880e-106f-4366-9d00-cc9355d99abc@5.181.188.224:443?security=reality&type=tcp&headerType=none&flow=xtls-rprx-vision&sni=web.max.ru&fp=chrome&pbk=EA-Sxh4tF7Iym27iYccYI5aCrc796cBJgRv9_maBbl4&spx=%2F&sid=85bd#%F0%9F%87%B7%F0%9F%87%BA%20WLUnlocker%20%D0%A0%D0%BE%D1%81%D1%81%D0%B8%D1%8F",
+        "vless://40b33e55-6049-4fac-940e-7b38a3f5f270@217.13.104.133:5443?flow=xtls-rprx-vision&encryption=none&type=tcp&security=reality&fp=randomized&sni=api-maps.yandex.ru&pbk=RVs7ZIQ7v3MIiCru0IttBEoTSrln5Au_8aSmyJq8pjM&sid=5cae63084b3281f3&spx=/#%F0%9F%87%B7%F0%9F%87%BA%20WLUnlocker%20%D0%A0%D0%BE%D1%81%D1%81%D0%B8%D1%8F",
+        "vless://0639f5a2-99b4-451d-9ba0-6f0a0597ac3b@95.85.224.28:443?flow=xtls-rprx-vision&encryption=none&type=tcp&security=reality&sni=m.vkvideo.cs7777.vk.ru&pbk=PzPuIsJG2yyrnO-9TKGyRxmo8DCJ6VCdpQ5l5l62QQQ#%F0%9F%87%B7%F0%9F%87%BA%20WLUnlocker%20%D0%A0%D0%BE%D1%81%D1%81%D0%B8%D1%8F",
+        "vless://1f0a8364-ae34-07d0-b999-34a723111ebd@72.56.13.186:52006?flow=xtls-rprx-vision&encryption=none&type=tcp&security=reality&fp=chrome&sni=max.ru&pbk=4CH3o5zOMcFNMbnwXnkAg0FFepmsc0QzhahXkUzb1ik&sid=d8c6b58bcbb0c323#%F0%9F%87%B7%F0%9F%87%BA%20WLUnlocker%20%D0%A0%D0%BE%D1%81%D1%81%D0%B8%D1%8F"
+    ];
+
+    let currentType = "wifi"; 
+    let finalBase64 = "";
+
+    function switchTab(device, btn) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.instruction-block').forEach(b => b.classList.add('hidden'));
+        document.getElementById(`instr-${device}`).classList.remove('hidden');
+    }
+
+    function selectList(type) {
+        currentType = type;
+        document.getElementById('btn-wifi').classList.remove('active');
+        document.getElementById('btn-white').classList.remove('active');
+        
+        if (type === 'wifi') {
+            document.getElementById('btn-wifi').classList.add('active');
+            document.getElementById('get-keys-btn').innerHTML = "⚫ Получить чёрные ключи";
+        } else {
+            document.getElementById('btn-white').classList.add('active');
+            document.getElementById('get-keys-btn').innerHTML = "⚪ Получить белые ключи";
+        }
+    }
+
+    function showMyKeys() {
+        const btn = document.getElementById('get-keys-btn');
+        btn.disabled = true;
+        btn.innerHTML = "⏳ Ищу лучшие серверы...";
+
+        setTimeout(() => {
+            const keysArray = (currentType === 'white') ? MY_KEYS_WHITE : MY_KEYS_WIFI;
+            const title = (currentType === 'white') ? "⚪ Белые ключи" : "⚫ Чёрные ключи (Wi-Fi)";
+            
+            if (keysArray.length === 0) {
+                if(tg) tg.showAlert("⚠️ Ключи для этого списка еще не добавлены."); else alert("⚠️ Ключи для этого списка еще не добавлены.");
+                btn.disabled = false;
+                btn.innerHTML = (currentType === 'white') ? "⚪ Получить белые ключи" : "⚫ Получить чёрные ключи";
+                return;
+            }
+
+            const combined = keysArray.join("\n");
+            finalBase64 = btoa(unescape(encodeURIComponent(combined)));
+            
+            document.getElementById('main-status').classList.add('hidden');
+            document.getElementById('connect-section').classList.add('hidden');
+            document.getElementById('keys-screen').classList.remove('hidden');
+            document.getElementById('keys-title').innerText = title;
+            document.getElementById('key-text').innerText = finalBase64;
+            
+            btn.disabled = false;
+            btn.innerHTML = (currentType === 'white') ? "⚪ Получить белые ключи" : "⚫ Получить чёрные ключи";
+        }, 3000); 
+    }
+
+    function copyKey() {
+        if (finalBase64) {
+            navigator.clipboard.writeText(finalBase64).then(() => {
+                if(tg) tg.showAlert("✅ Ключ скопирован!"); else alert("✅ Ключ скопирован!");
+            }).catch(() => {
+                alert("Не удалось скопировать. Выделите текст вручную.");
+            });
+        }
+    }
+
+    function goBack() {
+        document.getElementById('keys-screen').classList.add('hidden');
+        document.getElementById('main-status').classList.remove('hidden');
+        document.getElementById('connect-section').classList.remove('hidden');
+    }
+</script>
+</body>
+</html>
